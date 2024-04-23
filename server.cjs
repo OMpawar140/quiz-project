@@ -7,6 +7,8 @@ const cors = require('cors');
 const app = express();
 const PORT = 3000;
 
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // MongoDB connection setup
 mongoose.connect('mongodb+srv://ompawar:OMpawar52361@cluster0.dhiolel.mongodb.net/pandm');
 const db = mongoose.connection;
@@ -142,6 +144,52 @@ app.get('/video/:videoId', async (req, res) => {
     res.status(500).json({ error: 'Error retrieving video from the database' });
   }
 });
+
+// Existing code continues...
+
+const quizzesSchema = new mongoose.Schema({
+  quizName: String,
+  subject: String,
+  numQuestions: Number,
+  marksPerQuestion: Number,
+  timeLimit: Number,
+  questions: [{
+    text: String,
+    answers: [String],
+    correctAnswer: Number,
+    solution: String,
+    imageUrl: String
+  }]
+});
+
+const Quiz = mongoose.model('Quiz', quizzesSchema);
+
+// POST endpoint to handle quiz data submission
+app.post('/quizzes', async (req, res) => {
+  const quizData = req.body;
+
+  try {
+    const newQuiz = new Quiz(quizData);
+    await newQuiz.save();
+    res.status(200).json({ message: 'Quiz data saved to the database' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error saving quiz data to the database' });
+  }
+});
+
+// GET endpoint to retrieve all quizzes
+// app.get('/quizzes', async (req, res) => {
+//   try {
+//     const quizzes = await Quiz.find();
+//     res.status(200).json(quizzes);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: 'Error retrieving quizzes from the database' });
+//   }
+// });
+
+// Existing code continues...
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
