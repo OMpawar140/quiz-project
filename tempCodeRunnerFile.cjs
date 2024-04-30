@@ -178,21 +178,16 @@ app.post('/quizzes', async (req, res) => {
   }
 });
 
-// GET endpoint to retrieve a quiz by ID
-app.get('/quizzes/:quizId', async (req, res) => {
+// GET endpoint to retrieve all quizzes
+app.get('/quizzes', async (req, res) => {
   try {
-    const quizId = req.params.quizId;
-    const quiz = await Quiz.findById(quizId);
-    if (!quiz) {
-      return res.status(404).json({ error: 'Quiz not found' });
-    }
-    res.status(200).json(quiz);
+    const quizzes = await Quiz.find();
+    res.status(200).json(quizzes);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Error retrieving quiz from the database' });
+    res.status(500).json({ error: 'Error retrieving quizzes from the database' });
   }
 });
-
 
 // Existing code continues...
 
