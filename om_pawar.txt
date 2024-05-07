@@ -1,0 +1,91 @@
+<template>
+  <div v-if="quiz">
+    <!-- Display quiz details -->
+    <h2>{{ quiz.quizName }}</h2>
+    <p>Subject: {{ quiz.subject }}</p>
+    <p>Number of questions: {{ quiz.numQuestions }}</p>
+    <!-- Add more details as needed -->
+
+    <!-- Start button -->
+    <button @click="startQuiz" v-if="!quizStarted && !quizSubmitted">Start Quiz</button>
+
+    <!-- Display questions -->
+    <div v-if="quizStarted && !quizSubmitted">
+      <div v-for="(question, index) in quiz.questions" :key="index">
+        <h3>{{ question.text }}</h3>
+        <!-- Display question options -->
+        <ul>
+          <li v-for="(answer, optionIndex) in question.answers" :key="optionIndex">
+            <input type="radio" :value="optionIndex" v-model="selectedAnswers[index]" :disabled="quizSubmitted">{{ answer }}
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Submit button -->
+    <button @click="submitQuiz" v-if="quizStarted && !quizSubmitted">Submit Quiz</button>
+
+    <!-- Display quiz result -->
+    <div v-if="quizSubmitted">
+      <h3>Quiz Result</h3>
+      <p v-if="quizScore === null">Quiz submitted. Waiting for results...</p>
+      <p v-else>Score: {{ quizScore }}</p>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted } from "vue";
+import axios from "axios";
+
+const quiz = ref(null);
+const selectedAnswers = ref([]);
+const quizStarted = ref(false);
+const quizSubmitted = ref(false);
+const quizScore = ref(null);
+
+// Fetch quiz data from the server
+const fetchQuiz = async () => {
+  try {
+    const response = await axios.get(`http://localhost:3000/quizzes`);
+    quiz.value = response.data;
+    // Initialize selectedAnswers array with null values for each question
+    // selectedAnswers.value = Array(quiz.value.questions.length).fill(null);
+  } catch (err) {
+    console.error("Error fetching quiz:", err);
+  }
+};
+
+// Start quiz function
+const startQuiz = () => {
+  quizStarted.value = true;
+};
+
+// Submit quiz function
+const submitQuiz = async () => {
+  // Perform any necessary actions to submit the quiz
+  // For demonstration, let's just log the selected answers
+  console.log(selectedAnswers.value);
+
+  // Assume submitting quiz to server and fetching score
+  try {
+    const response = await axios.post(`http://localhost:3000/submit-quiz/${props.quizId}`, {
+      selectedAnswers: selectedAnswers.value
+    });
+    quizScore.value = response.data.score;
+  } catch (err) {
+    console.error("Error submitting quiz:", err);
+  }
+
+  quizSubmitted.value = true;
+};
+
+onMounted(() => {
+  fetchQuiz();
+});
+
+</script>
+
+<style scoped>
+/* Add your styling here */
+</style>

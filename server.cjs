@@ -46,6 +46,7 @@ const Video = mongoose.model('Video', videosSchema);
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
+  // eslint-disable-next-line no-undef
   res.sendFile(__dirname + '/index.html');
 });
 
@@ -156,9 +157,9 @@ const quizzesSchema = new mongoose.Schema({
   questions: [{
     text: String,
     answers: [String],
-    correctAnswer: Number,
-    solution: String,
-    imageUrl: String
+    correctAnswerIndex: Number,
+    solution:String,
+    marks: Number 
   }]
 });
 
@@ -179,15 +180,105 @@ app.post('/quizzes', async (req, res) => {
 });
 
 // GET endpoint to retrieve all quizzes
-// app.get('/quizzes', async (req, res) => {
-//   try {
-//     const quizzes = await Quiz.find();
-//     res.status(200).json(quizzes);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: 'Error retrieving quizzes from the database' });
-//   }
-// });
+app.get('/quizzes', async (req, res) => {
+  try {
+    const quizzes = await Quiz.find();
+    res.status(200).json(quizzes);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error retrieving quizzes from the database' });
+  }
+});
+
+// GET endpoint to retrieve a quiz by ID
+app.get('/quizzes/:quizId', async (req, res) => {
+  try {
+    const quizId = req.params.quizId;
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({ error: 'Quiz not found' });
+    }
+    res.status(200).json(quiz);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error retrieving quiz from the database' });
+  }
+});
+
+const quizResponseSchema = new mongoose.Schema({
+  userEmail: String, // Reference to the User model
+  userName: String,
+  quizId: { type: mongoose.Schema.Types.ObjectId, ref: 'Quiz' }, // Reference to the Quiz model
+  responses: [{
+    questionIndex: Number,
+    selectedAnswerIndex: Number
+  }],
+  score: Number,
+  marks: Number // Assuming marks field is required
+});
+
+const QuizResponse = mongoose.model('QuizResponse', quizResponseSchema);
+
+app.post('/quiz-responses', async (req, res) => {
+  try {
+    const { userEmail, userName, quizId, responses, score, marks } = req.body; // Retrieve data from request body
+
+    // Create a new QuizResponse instance
+    const newQuizResponse = new QuizResponse({
+      userEmail,
+      userName,
+      quizId,
+      responses,
+      score,
+      marks
+    });
+
+    // Save the new QuizResponse to the database
+    await newQuizResponse.save();
+
+    // Send success response
+    res.status(200).json({ message: 'Quiz response saved to the database' });
+  } catch (err) {
+    // Handle errors
+    console.error(err);
+    res.status(500).json({ error: 'Error saving quiz response to the database' });
+  }
+});
+
+
+app.get('/quiz-responses', async (req, res) => {
+  try {
+    const quizResponses = await QuizResponse.find();
+    res.status(200).json(quizResponses);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error retrieving quiz responses from the database' });
+  }
+});
+
+// GET endpoint to retrieve quiz responses by quiz ID
+app.get('/quiz-responses/:quizId', async (req, res) => {
+  try {
+    const quizId = req.params.quizId;
+    const quizResponses = await QuizResponse.find({ quizId });
+    res.status(200).json(quizResponses);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error retrieving quiz responses from the database' });
+  }
+});
+
+// GET endpoint to retrieve quiz responses by user email
+app.get('/user-quiz-responses/:userEmail', async (req, res) => {
+  try {
+    const email = req.params.email;
+    const quizResponses = await QuizResponse.find({ email });
+    res.status(200).json(quizResponses);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error retrieving quiz responses from the database' });
+  }
+});
 
 // Existing code continues...
 

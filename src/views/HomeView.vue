@@ -7,15 +7,27 @@
       Search
     </button>
   </div>
-
+<h2>Available Quizzes </h2>
+    <br>
   <!-- <v-container> -->
   <v-row>
+    <!-- Display uploaded videos -->
     <v-col v-for="(video, index) in uploadedVideos" :key="index" cols="12" sm="6" md="4" lg="3">
-      <v-card @click="openVideoPage(video.id)">
+      <v-card @click="openVideoPage(video.id)" class="video-card">
         <v-img :src="video.thumbnail" alt="Video Thumbnail" width="300"></v-img>
         <v-card-subtitle style="font-size: medium;">{{ video.uploadedBy }}</v-card-subtitle>
         <v-card-title style="font-size: medium;">{{ video.name }}</v-card-title>
       </v-card>
+    </v-col>
+    <!-- Display quizzes -->
+   
+    <v-col v-for="(quiz, index) in quizzes" :key="index" cols="12" sm="6" md="4" lg="3"> 
+    
+      <router-link :to="{ name: 'quiz', params: { quizId: quiz._id } }">
+        <v-card class="quiz-card">
+          <div>{{ quiz.quizName }}</div>
+        </v-card>
+      </router-link>
     </v-col>
   </v-row>
   <v-alert v-if="error" type="error">{{ error }}</v-alert>
@@ -91,6 +103,7 @@ const fetchData = async () => {
 
 const searchQuery = ref("");
 const uploadedVideos = ref([]);
+const quizzes = ref([]);
 const error = ref(null);
 
 const fetchVideos = async () => {
@@ -108,20 +121,26 @@ const fetchVideos = async () => {
     error.value = "Error fetching videos. Please try again later.";
   }
 };
-const removeExtension = (filename) => {
-  return filename.split('.').slice(0, -1).join('.');
+
+const fetchQuizzes = async () => {
+  try {
+    const response = await axios.get('http://localhost:3000/quizzes');
+    quizzes.value = response.data;
+  } catch (err) {
+    console.error("Error fetching quizzes:", err);
+    error.value = "Error fetching quizzes. Please try again later.";
+  }
 };
-
-onMounted(() => {
-  fetchVideos();
-  fetchData();
-});
-
-
 
 const submitSearch = () => {
   // Implement search functionality
 };
+
+onMounted(() => {
+  fetchVideos();
+  fetchQuizzes();
+  fetchData();
+});
 </script>
 
 <style scoped>
@@ -149,6 +168,30 @@ const submitSearch = () => {
   margin-right: 10px;
 }
 
+.quiz-card {
+  padding: 20px;
+  background-color: rgba(235, 182, 9, 0.829);
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(216, 171, 23, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.quiz-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.video-card {
+  padding: 20px;
+  background-color: rgba(235, 182, 9, 0.829);
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(216, 171, 23, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.video-card:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 .submit-button {
   padding: 10px 20px;
   background-color: #19d73f;
@@ -162,8 +205,10 @@ const submitSearch = () => {
   background-color: #158ee5;
 }
 
-main {
-  padding-top: 10%;
-  /* Adjust as needed */
+/* Error message */
+.error-message {
+  color: red;
+  text-align: center;
+  margin-top: 20px;
 }
 </style>

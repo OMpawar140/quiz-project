@@ -3,7 +3,10 @@
     <!-- Countdown Timer -->
     <div class="time-display" v-if="!previewing">
     </div>
+    <br>
     <h2>Create Your Quiz</h2>
+    <hr/>
+    <br>
     <div class="input-group" v-if="!timeExpired">
       <label for="quiz-name">Quiz Name:</label>
       <input type="text" id="quiz-name" v-model="quizName" placeholder="Enter quiz name">
@@ -190,7 +193,13 @@ export default {
         numQuestions: this.numQuestions,
         marksPerQuestion: this.marksPerQuestion,
         timeLimit: this.timeLimit,
-        questions: this.questions
+        questions: this.questions.map(question => ({
+        text: question.text,
+        answers: question.answers,
+        correctAnswerIndex: question.correctAnswer,
+        solution:question.solution,
+        marks: this.marksPerQuestion
+       }))
       };
 
       axios.post('http://localhost:3000/quizzes', quizData)
@@ -214,7 +223,6 @@ export default {
 </script>
   
   <style scoped>
-  
     .input-group {
       margin-bottom: 20px;
     }
@@ -232,6 +240,9 @@ export default {
       margin-bottom: 10px;
     }
     
+    input:hover {
+      border-color: aqua;
+    }
     .input-group select {
       padding: 7px;
     }

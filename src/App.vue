@@ -7,7 +7,7 @@ import router from './router';
 </script>
 <template>
   <v-layout class="rounded rounded-md">
-    <v-app-bar title="GATE Focused">
+    <v-app-bar title="Quiz Sphere">
       <v-tabs>
         <v-tab to="/">Home</v-tab>
         <template v-if="user_type === 'teacher'">
@@ -82,7 +82,7 @@ export default {
       localStorage.clear();
       googleLogout();
       router.push("/login");
-      menu = false;
+      menu = false
 
     }
   },
