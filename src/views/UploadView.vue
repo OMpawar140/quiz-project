@@ -97,6 +97,8 @@
 </template>
 
 <script>
+import { storage } from '@/main';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import axios from 'axios';
 
 export default {
@@ -146,15 +148,18 @@ export default {
       }
     },
     handleImageUpload(event, index) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          this.questions[index].imageUrl = reader.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    },
+    const file = event.target.files[0];
+    if (file) {
+      const storageRef = ref(storage, `quiz_images/${file.name}`);
+      uploadBytes(storageRef, file).then((snapshot) => {
+        getDownloadURL(snapshot.ref).then((downloadURL) => {
+          this.questions[index].imageUrl = downloadURL;
+        });
+      }).catch((error) => {
+        console.error("Error uploading image: ", error);
+      });
+    }
+  },
     submitAnswer(question, index) {
       question.isAnswerChecked = true;
       question.isCorrect = (question.selectedAnswer == question.correctAnswer);
@@ -187,7 +192,11 @@ export default {
       });
     },
     submitQuiz() {
+    const teacherEmail = localStorage.getItem("usr_email");
+    const teacherName = localStorage.getItem("usr_name");
       const quizData = {
+        teacherEmail,
+        teacherName,
         quizName: this.quizName,
         subject: this.subject,
         numQuestions: this.numQuestions,
@@ -198,6 +207,7 @@ export default {
         answers: question.answers,
         correctAnswerIndex: question.correctAnswer,
         solution:question.solution,
+        imageURL:question.imageUrl,
         marks: this.marksPerQuestion
        }))
       };

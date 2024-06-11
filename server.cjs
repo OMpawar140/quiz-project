@@ -3,6 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const ExcelJS = require('exceljs');
+
 
 const app = express();
 const PORT = 3000;
@@ -149,6 +151,8 @@ app.get('/video/:videoId', async (req, res) => {
 // Existing code continues...
 
 const quizzesSchema = new mongoose.Schema({
+  teacherEmail: String,
+  teacherName: String,
   quizName: String,
   subject: String,
   numQuestions: Number,
@@ -159,6 +163,7 @@ const quizzesSchema = new mongoose.Schema({
     answers: [String],
     correctAnswerIndex: Number,
     solution:String,
+    imageURL:String,
     marks: Number 
   }]
 });
@@ -181,7 +186,7 @@ app.post('/quizzes', async (req, res) => {
 
 // GET endpoint to retrieve all quizzes
 app.get('/quizzes', async (req, res) => {
-  try {
+  try { 
     const quizzes = await Quiz.find();
     res.status(200).json(quizzes);
   } catch (err) {
@@ -206,6 +211,7 @@ app.get('/quizzes/:quizId', async (req, res) => {
 });
 
 const quizResponseSchema = new mongoose.Schema({
+  userType: String,
   userEmail: String, // Reference to the User model
   userName: String,
   quizId: { type: mongoose.Schema.Types.ObjectId, ref: 'Quiz' }, // Reference to the Quiz model
@@ -214,38 +220,38 @@ const quizResponseSchema = new mongoose.Schema({
     selectedAnswerIndex: Number
   }],
   score: Number,
-  marks: Number // Assuming marks field is required
+  createdAt: { type: Date, default: Date.now },
+  timeAtresponse: { type: String, default: () => new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }) },
+  
 });
 
 const QuizResponse = mongoose.model('QuizResponse', quizResponseSchema);
 
 app.post('/quiz-responses', async (req, res) => {
   try {
-    const { userEmail, userName, quizId, responses, score, marks } = req.body; // Retrieve data from request body
+    const { userType, userEmail, userName, quizId, responses, score, createdAt, timeAtresponse } = req.body;
 
-    // Create a new QuizResponse instance
     const newQuizResponse = new QuizResponse({
+      userType,
       userEmail,
       userName,
       quizId,
       responses,
       score,
-      marks
+      createdAt,
+      timeAtresponse,
     });
 
-    // Save the new QuizResponse to the database
     await newQuizResponse.save();
 
-    // Send success response
     res.status(200).json({ message: 'Quiz response saved to the database' });
   } catch (err) {
-    // Handle errors
     console.error(err);
     res.status(500).json({ error: 'Error saving quiz response to the database' });
   }
 });
 
-
+// Endpoint to retrieve all quiz responses
 app.get('/quiz-responses', async (req, res) => {
   try {
     const quizResponses = await QuizResponse.find();
@@ -256,29 +262,56 @@ app.get('/quiz-responses', async (req, res) => {
   }
 });
 
-// GET endpoint to retrieve quiz responses by quiz ID
-app.get('/quiz-responses/:quizId', async (req, res) => {
+
+
+// Endpoint to download quiz responses as an Excel file
+app.get('/quiz-responses/:quizId/download', async (req, res) => {
+  const quizId = req.params.quizId;
+
   try {
-    const quizId = req.params.quizId;
-    const quizResponses = await QuizResponse.find({ quizId });
-    res.status(200).json(quizResponses);
+    const responses = await QuizResponse.find({ quizId}).populate('quizId');
+
+    if (!responses || responses.length === 0) {
+      return res.status(404).json({ error: 'No responses found for the specified quiz.' });
+    }
+
+    const quizName = responses[0].quizId.quizName; 
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Responses');
+
+    worksheet.columns = [
+      { header: 'Student Name', key: 'studentName', width: 30 },
+      { header: 'Student Email', key: 'studentEmail', width: 30 },
+      // { header: 'Response Type', key: 'responserType', width: 30 },
+      { header: 'Response Date', key: 'responseDate', width: 25 },
+      { header: 'Response Time', key: 'responseTime', width: 15 },
+      { header: 'Student Score', key: 'studentScore', width: 15 },
+    ];
+
+    responses.forEach(response => {
+      if(response.userType === "student"){
+        worksheet.addRow({
+        studentEmail: response.userEmail,
+        studentName: response.userName,
+        // responserType: response.userType,
+        studentScore: response.score,
+        responseDate: response.createdAt.toLocaleDateString(),
+        responseTime: response.timeAtresponse,
+      });
+      }
+    });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${quizName} quiz-responses.xlsx`);
+
+    await workbook.xlsx.write(res);
+    res.end();
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Error retrieving quiz responses from the database' });
+    res.status(500).json({ error: 'Error generating Excel file' });
   }
 });
 
-// GET endpoint to retrieve quiz responses by user email
-app.get('/user-quiz-responses/:userEmail', async (req, res) => {
-  try {
-    const email = req.params.email;
-    const quizResponses = await QuizResponse.find({ email });
-    res.status(200).json(quizResponses);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error retrieving quiz responses from the database' });
-  }
-});
 
 // Existing code continues...
 

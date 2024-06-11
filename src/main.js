@@ -16,6 +16,8 @@ import store from './store'
 import { initializeApp } from 'firebase/app'
 import { getAnalytics } from 'firebase/analytics'
 import { getFirestore} from '@firebase/firestore'
+import { getStorage } from 'firebase/storage'
+
 
 
 const vuetify = createVuetify({
@@ -24,20 +26,19 @@ const vuetify = createVuetify({
 })
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyAa-rkk0WaD--a20SJ24KrBrLjzqw9klR0',
-  authDomain: 'ctc-team.firebaseapp.com',
-  projectId: 'ctc-team',
-  storageBucket: 'ctc-team.appspot.com',
-  messagingSenderId: '1087019280878',
-  appId: '1:1087019280878:web:9c7eabf2784676238546ff',
-  measurementId: 'G-M4V60C0Y5C'
-}
+  apiKey: "AIzaSyBDgPHYg6R8TvTWL35GMFG7P3DdcVitrbU",
+  authDomain: "img-quiz-12fb7.firebaseapp.com",
+  projectId: "img-quiz-12fb7",
+  storageBucket: "img-quiz-12fb7.appspot.com",
+  messagingSenderId: "770626092113",
+  appId: "1:770626092113:web:6d183169a10abb71fecc70",
+  measurementId: "G-VVXV77SN1C"
+};
 
-
-
-const app = initializeApp(firebaseConfig)
-const analytics = getAnalytics(app)
-const fbStore = getFirestore(app)
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
+const analytics = getAnalytics(app);
+const fbStore = getFirestore(app);
 const db = getFirestore(app);
 
 createApp(App)
@@ -48,3 +49,5 @@ createApp(App)
     clientId: '1087019280878-14af4iptsmtlk196jalmidqmp2pqladk.apps.googleusercontent.com'
   })
   .mount('#app')
+
+  export { storage };
