@@ -5,8 +5,8 @@
       <button @click="submitSearch" class="submit-button">Search</button>
     </div>
 
-    <h2 v-if="user_type === 'student'">Available Quizzes</h2>
-    <h2 v-if="user_type === 'teacher'">Created Quizzes</h2>
+    <h2 v-if="user_type === 'student'" style="position: fixed;">Available Quizzes</h2>
+    <h2 v-if="user_type === 'teacher'" style="position: fixed;">Created Quizzes</h2>
     <br>
 
     <v-row>
@@ -29,8 +29,13 @@
               </a>
             </li>
             <li>
-              <a href="javascript:void(0)" @click="otherOptionHandler(quiz._id)">
-                Other Option
+              <a href="javascript:void(0)" @click="updateQuiz(quiz)">
+                Update Quiz
+              </a>
+            </li>
+            <li>
+              <a href="javascript:void(0)" @click="deleteQuiz(quiz._id)">
+                Delete Quiz
               </a>
             </li>
           </ul>
@@ -41,6 +46,7 @@
     <v-alert v-if="error" type="error">{{ error }}</v-alert>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue';
@@ -148,9 +154,25 @@ const downloadResponses = async (quizId, quizName) => {
   }
 };
 
-const otherOptionHandler = (quizId) => {
-  console.log(`Other option clicked for quiz ${quizId}`);
+const deleteQuiz = async (quizId) => {
+  try {
+    await axios.delete(`http://localhost:3000/quizzes/${quizId}`);
+    quizzes.value = quizzes.value.filter((quiz) => quiz._id !== quizId);
+    console.log(`Quiz ${quizId} deleted successfully`);
+  } catch (error) {
+    console.error('Error deleting quiz:', error);
+  }
 };
+
+const updateQuiz = async (quiz) => {
+  try {
+    console.log(`Updating quiz`, quiz);
+    router.push({ name: 'update-quiz', params: { quizId: quiz._id } });
+  } catch (error) {
+    console.error('Error updating quiz:', error);
+  }
+};
+
 
 const showMenu = ref({});
 
@@ -164,6 +186,7 @@ onMounted(() => {
   fetchData();
 });
 </script>
+
 
 <style scoped>
 .search-bar-container {

@@ -210,6 +210,40 @@ app.get('/quizzes/:quizId', async (req, res) => {
   }
 });
 
+// DELETE endpoint to delete a quiz by ID
+app.delete('/quizzes/:quizId', async (req, res) => {
+    try {
+      const quizId = req.params.quizId;
+      const deletedQuiz = await Quiz.findByIdAndDelete(quizId);
+      if (!deletedQuiz) {
+        return res.status(404).json({ error: 'Quiz not found' });
+      }
+      res.status(200).json({ message: 'Quiz deleted successfully' });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error deleting quiz from the database' });
+    }
+  });
+  
+
+  // Update quiz endpoint
+
+app.put('/quizzes/:quizId', async (req, res) => {
+    try {
+      const quizId = req.params.quizId;
+      const updatedQuiz = req.body;
+      const quiz = await Quiz.findByIdAndUpdate(quizId, updatedQuiz, { new: true });
+      if (!quiz) {
+        return res.status(404).json({ error: 'Quiz not found' });
+      }
+      res.status(200).json({ message: 'Quiz updated successfully', quiz });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Error updating quiz' });
+    }
+  });
+
+  
 const quizResponseSchema = new mongoose.Schema({
   userType: String,
   userEmail: String, // Reference to the User model

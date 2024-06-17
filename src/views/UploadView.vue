@@ -35,7 +35,8 @@
       <input type="text" v-model="question.text" placeholder="Type your question" class="question-input">
       <input type="file" accept="image/*" @change="handleImageUpload($event, index)">
       <img v-if="question.imageUrl" :src="question.imageUrl" alt="Question Image">
-      <ol type="A">
+      <button v-if="question.imageUrl" @click="removeImage(index)" class="remove-image-btn">Remove Image</button>
+      <ol type="A">  
         <li v-for="(answer, answerIndex) in question.answers" :key="answerIndex">
           <input type="text" v-model="question.answers[answerIndex]" placeholder="Type option " class="answer-input">
         </li>
@@ -98,7 +99,7 @@
 
 <script>
 import { storage } from '@/main';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import axios from 'axios';
 
 export default {
@@ -147,6 +148,23 @@ export default {
         this.startTimer(); 
       }
     },
+
+    async removeImage(index) {
+      const imageUrl = this.questions[index].imageUrl;
+      if (imageUrl.startsWith('https://firebasestorage.googleapis.com')) {
+        // Remove image from Firebase Storage
+        const fileRef = ref(storage, imageUrl);
+        try {
+          await deleteObject(fileRef);
+          console.log('File deleted from Firebase Storage');
+        } catch (error) {
+          console.error('Error deleting file from Firebase Storage:', error);
+        }
+      }
+      // Clear image details from the question object
+      this.questions[index].imageUrl = '';
+    },
+
     handleImageUpload(event, index) {
     const file = event.target.files[0];
     if (file) {
@@ -233,6 +251,25 @@ export default {
 </script>
   
   <style scoped>
+
+    .remove-image-btn {
+      display: block;
+      height: 30px;
+      background-color: rgb(174, 28, 28);
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      margin-top: 5px;
+      margin-left: 31.5%;
+      margin-bottom: 10px;
+      font-size:smaller;
+      padding-top: 5px;
+    }
+
+    .remove-image-btn:hover {
+      background-color: #e90808;
+    }
     .input-group {
       margin-bottom: 20px;
     }

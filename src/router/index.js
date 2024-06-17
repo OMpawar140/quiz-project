@@ -39,7 +39,12 @@ const router = createRouter({
       name: 'quiz',
       component: () => import('../views/quiz.vue'),
       props: true // Pass route params as props
-    }
+    },
+    {
+      path: '/updateQuiz/:quizId', // Add the new route
+      name: 'update-quiz',
+      component: () => import('../views/updateQuiz.vue'),
+    },
   ]
 })
 
